@@ -28,7 +28,6 @@ const $modal = `
 
 const $addPostBtn = document.querySelector('#add-post');
 $addPostBtn.addEventListener('click', createModal)
-
 function createModal() {
   const $modalEl = document.createElement('div');
   $modalEl.setAttribute("class", "modal__layout");
@@ -43,15 +42,15 @@ function createModal() {
   const $fileEl = document.querySelector('#file');
   $fileEl.addEventListener("input", function() {
     const reader = new FileReader();
-    reader.readAsDataURL($fileEl.files[0]);
 
+    reader.readAsDataURL($fileEl.files[0]);
     reader.onload = function () {
       const imageBase64 = reader.result;
 
       document.querySelector(".modal__card").setAttribute("class", "modal__card write--post")
       document.querySelector(".modal__main").setAttribute("class", "modal__main write--post")
       const $backBtn = document.querySelector(".modal__back >img");
-      const $shareBtn = document.querySelector(".modal__header >  p");
+      const $shareBtn = document.querySelector(".modal__header>  p");
       $backBtn.style.visibility = "visible"
       $shareBtn.style.visibility = "visible"
 
@@ -62,9 +61,36 @@ function createModal() {
         createModal();
       })
 
+      $shareBtn.addEventListener('click', () => {
+        if (window.indexedDB) {
+            const databaseName = "instagram";
+            const version = 1;
+            const request = indexedDB.open(databaseName, version);
+            const data = {
+                content: document.querySelector(".modal__write > textarea").value,
+                image: imageBase64,
+            };
+    
+            request.onupgradeneeded = function () {
+                request.result.createObjectStore("posts", { autoIncrement: true });
+            }
+    
+            request.onsuccess = function () {
+                const store = request.result
+                    .transaction("posts", "readwrite")
+                    .objectStore("posts");
+    
+                // key를 명시적으로 생성하고 add 메서드에 전달
+                const key = Date.now(); // 예시로 현재 시간을 key로 사용
+                store.add(data, key);
+            }
+        }
+    });
+    
+
 
     }
-    reader.error = function (error) {
+    reader.onerror = function (error) {
       alert("Error", error)
       document.body.removeChild($modalEl);
     }
