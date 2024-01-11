@@ -27,18 +27,59 @@ const $modal = `
               `;
 
 const $addPostBtn = document.querySelector('#add-post');
-$addPostBtn.addEventListener('click', () => {
-  console.log('click');
+$addPostBtn.addEventListener('click', createModal)
+
+function createModal() {
   const $modalEl = document.createElement('div');
   $modalEl.setAttribute("class", "modal__layout");
   $modalEl.innerHTML = $modal;
-  document.body.prepend($modalEl);
+  document.querySelector('body').prepend($modalEl);
 
-  document.querySelector(".modal__close > img")
+  document.querySelector(".modal__close ")
     .addEventListener('click', () => {
-      document.body.removeChild($modalEl);
+      document.querySelector('body').removeChild($modalEl);
     })
 
-})
+  const $fileEl = document.querySelector('#file');
+  $fileEl.addEventListener("input", function() {
+    const reader = new FileReader();
+    reader.readAsDataURL($fileEl.files[0]);
+
+    reader.onload = function () {
+      const imageBase64 = reader.result;
+
+      document.querySelector(".modal__card").setAttribute("class", "modal__card write--post")
+      document.querySelector(".modal__main").setAttribute("class", "modal__main write--post")
+      const $backBtn = document.querySelector(".modal__back >img");
+      const $shareBtn = document.querySelector(".modal__header >  p");
+      $backBtn.style.visibility = "visible"
+      $shareBtn.style.visibility = "visible"
+
+      document.querySelector(".modal__main").innerHTML = createPost(imageBase64)
+
+      $backBtn.addEventListener('click', () => {
+        document.body.removeChild($modalEl);
+        createModal();
+      })
+
+
+    }
+    reader.error = function (error) {
+      alert("Error", error)
+      document.body.removeChild($modalEl);
+    }
+  })
+}
+
+function createPost(img) {
+  return `
+  <div class="modal__post">
+    <img width="478px" height="478px" src=${img} alt="img">
+    <div class = "modal__write">
+      <textarea placeholder = "문구 입력 ..." autofocus></textarea>
+    </div>
+  </div>
+  `;
+}
 
 
