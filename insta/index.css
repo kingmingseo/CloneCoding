@@ -213,15 +213,23 @@
 
 .main__posts {
   width: 100%;
-  height: 293px;
+  height: auto;
   margin-top: 12px;
 
   display: flex;
-  justify-content: center;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 
   font-size: 28px;
 }
+
+.main__posts.not-posts {
+  height: 293px;
+
+  justify-content: center;
+
+  flex-wrap: nowrap;
+}
+
 
 .main__posts > img {
   width: 283px;
@@ -436,7 +444,6 @@
 }
 
 
-
 .modal__layout > .modal__card > .modal__main > .modal__post {
   display: flex;
 }
@@ -472,5 +479,3 @@
 .modal__layout > .modal__card.write--post > .modal__main.write--post {
   height: auto;
 }
-
-

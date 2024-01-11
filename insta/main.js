@@ -40,7 +40,7 @@ function createModal() {
     })
 
   const $fileEl = document.querySelector('#file');
-  $fileEl.addEventListener("input", function() {
+  $fileEl.addEventListener("input", function () {
     const reader = new FileReader();
 
     reader.readAsDataURL($fileEl.files[0]);
@@ -61,32 +61,50 @@ function createModal() {
         createModal();
       })
 
-      $shareBtn.addEventListener('click', () => {
+      $shareBtn.addEventListener('click', function () {
+        const databaseName = "instagram";
+        const version = 1;
+        const data = {
+          content: document.querySelector(".modal__write > textarea").value,
+          image: imageBase64,
+        };
         if (window.indexedDB) {
-            const databaseName = "instagram";
-            const version = 1;
-            const request = indexedDB.open(databaseName, version);
-            const data = {
-                content: document.querySelector(".modal__write > textarea").value,
-                image: imageBase64,
+          const request = indexedDB.open(databaseName, version);
+
+          request.onsuccess = function () {
+            const store = request.result
+              .transaction("posts", "readwrite")
+              .objectStore("posts");
+
+
+            const key = Date.now(); // 예시로 현재 시간을 key로 사용
+            store.add(data, key).onsuccess = function () {
+              store.getAll().onsuccess = function (e) {
+                const response = e.target.result;
+
+                const $mainPostEl = document.querySelector('.main__posts');
+                $mainPostEl.setAttribute("class", "main__posts");
+                document.querySelector('body').removeChild($modalEl);
+                $mainPostEl.innerHTML = ""
+                for (let i = 0; i < response.length; i++) {
+                  const $postListEl = document.createElement("img");
+                  $postListEl.setAttribute("src", response[i].image);
+
+                  $mainPostEl.appendChild($postListEl);
+                }
+
+
+              }
             };
-    
-            request.onupgradeneeded = function () {
-                request.result.createObjectStore("posts", { autoIncrement: true });
-            }
-    
-            request.onsuccess = function () {
-                const store = request.result
-                    .transaction("posts", "readwrite")
-                    .objectStore("posts");
-    
-                // key를 명시적으로 생성하고 add 메서드에 전달
-                const key = Date.now(); // 예시로 현재 시간을 key로 사용
-                store.add(data, key);
-            }
+          };
+
         }
-    });
-    
+      });
+
+
+
+
+
 
 
     }
@@ -107,5 +125,42 @@ function createPost(img) {
   </div>
   `;
 }
+
+function main() {
+  document.querySelector('#add-post').addEventListener('click', createModal);
+
+  const databaseName = 'instagram';
+  const version = 1;
+
+  if (window.indexedDB) {
+    const request = indexedDB.open(databaseName, version);
+    request.onupgradeneeded = function () {
+      request.result.createObjectStore("posts", { autoIncrement: true });
+    }
+    request.onsuccess = function () {
+      const store = request.result
+        .transaction('posts', 'readwrite')
+        .objectStore('posts');
+      store.getAll().onsuccess = function (e) {
+        const response = e.target.result;
+        if (response.length !== 0) {
+          document.querySelector('.main__posts').innerHTML = ""
+          for (let i = 0; i < response.length; i++) {
+            const $postListEl = document.createElement("img");
+            $postListEl.setAttribute("src", response[i].image);
+
+            document.querySelector(".main__posts").appendChild($postListEl);
+          }
+        }
+        else {
+          document.querySelector('.main__posts').setAttribute("class", "main__posts not-posts");
+        }
+
+      };
+    };
+  }
+}
+
+main();
 
 
